@@ -32,6 +32,16 @@ export type ShoppingItem = {
   quantity: number;
 };
 
+export type CustomerProfile = {
+  id: string;
+  name: string;
+  description: string;
+  totalPaidCents: number;
+  orderCount: number;
+  drinkCount: number;
+  topDrinks: { name: string; quantity: number }[];
+};
+
 type OrderRow = {
   id: string;
   customer_name: string;
@@ -58,6 +68,7 @@ type ItemRow = {
 export async function getAdminDashboardData(): Promise<{
   orders: AdminOrder[];
   shoppingList: ShoppingItem[];
+  profiles: CustomerProfile[];
 }> {
   const db = await ensureDatabase();
   const { rows: orderRows } = await db.query<OrderRow>(
@@ -109,6 +120,33 @@ export async function getAdminDashboardData(): Promise<{
       ORDER BY oi.item_name ASC, oi.item_detail ASC, oi.flavor ASC`,
   );
 
+  const { rows: profileRows } = await db.query<{
+    id: string; name: string; description: string; total_paid_cents: number;
+    order_count: number; drink_count: number;
+  }>(
+    `SELECT p.id, p.name, p.description,
+            COALESCE((SELECT SUM(o.total_cents) FROM orders o WHERE LOWER(TRIM(o.customer_name)) = LOWER(TRIM(p.name)) AND o.status IN ('paid', 'purchased')), 0)::integer AS total_paid_cents,
+            (SELECT COUNT(*) FROM orders o WHERE LOWER(TRIM(o.customer_name)) = LOWER(TRIM(p.name)))::integer AS order_count,
+            COALESCE((SELECT SUM(oi.quantity) FROM orders o JOIN order_items oi ON oi.order_id = o.id WHERE LOWER(TRIM(o.customer_name)) = LOWER(TRIM(p.name)) AND o.status IN ('paid', 'purchased')), 0)::integer AS drink_count
+       FROM customer_profiles p
+      ORDER BY p.name ASC`,
+  );
+  const { rows: drinkRows } = await db.query<{ profile_id: string; name: string; quantity: number }>(
+    `SELECT p.id AS profile_id, oi.item_name AS name, SUM(oi.quantity)::integer AS quantity
+       FROM customer_profiles p
+       JOIN orders o ON LOWER(TRIM(o.customer_name)) = LOWER(TRIM(p.name))
+       JOIN order_items oi ON oi.order_id = o.id
+      WHERE o.status IN ('paid', 'purchased')
+      GROUP BY p.id, oi.item_name
+      ORDER BY p.id, quantity DESC`,
+  );
+  const drinksByProfile = new Map<string, { name: string; quantity: number }[]>();
+  for (const drink of drinkRows) {
+    const list = drinksByProfile.get(drink.profile_id) ?? [];
+    if (list.length < 5) list.push({ name: drink.name, quantity: Number(drink.quantity) });
+    drinksByProfile.set(drink.profile_id, list);
+  }
+
   return {
     orders: orderRows.map((order) => ({
       id: order.id,
@@ -125,5 +163,15 @@ export async function getAdminDashboardData(): Promise<{
       ...item,
       quantity: Number(item.quantity),
     })),
+    profiles: profileRows.map((profile) => ({
+      id: profile.id,
+      name: profile.name,
+      description: profile.description,
+      totalPaidCents: Number(profile.total_paid_cents),
+      orderCount: Number(profile.order_count),
+      drinkCount: Number(profile.drink_count),
+      topDrinks: drinksByProfile.get(profile.id) ?? [],
+    })),
   };
 }
+
