@@ -2,6 +2,8 @@ import { requireOwner } from "@/app/owner-auth";
 import Link from "next/link";
 import { getAdminDashboardData } from "./data";
 import { StatusControl } from "./StatusControl";
+import { DeleteOrderButton } from "./DeleteOrderButton";
+import { DeleteProfileButton, ProfileForm } from "./ProfileForm";
 import styles from "./admin.module.css";
 
 export const dynamic = "force-dynamic";
@@ -131,6 +133,7 @@ export default async function AdminPage() {
                   </div>
                   <div className={styles.statusControl}>
                     <StatusControl orderId={order.id} initialStatus={order.status} />
+                    <DeleteOrderButton orderId={order.id} />
                   </div>
                 </footer>
               </article>
@@ -139,6 +142,28 @@ export default async function AdminPage() {
         ) : (
           <p className={styles.empty}>No orders have been submitted yet.</p>
         )}
+      </section>
+
+      <section className={styles.profilesSection} aria-labelledby="profiles-title">
+        <div className={styles.sectionTitle}>
+          <div><p className={styles.eyebrow}>Repeat buyers</p><h2 id="profiles-title">People you buy for</h2></div>
+          <p>Profiles match orders by name. Use the same name on an order to keep their history together.</p>
+        </div>
+        <ProfileForm />
+        {dashboard.profiles.length ? (
+          <div className={styles.profileGrid}>
+            {dashboard.profiles.map((profile) => {
+              const maxDrinks = Math.max(...profile.topDrinks.map((drink) => drink.quantity), 1);
+              return <article className={styles.profileCard} key={profile.id}>
+                <div className={styles.profileHeader}><div><h3>{profile.name}</h3><p>{profile.description || "No notes yet."}</p></div><DeleteProfileButton profileId={profile.id} /></div>
+                <div className={styles.profileMetrics}><div><strong>{formatMoney(profile.totalPaidCents)}</strong><span>paid</span></div><div><strong>{profile.orderCount}</strong><span>orders</span></div><div><strong>{profile.drinkCount}</strong><span>drinks</span></div></div>
+                {profile.topDrinks.length ? <div className={styles.barChart} aria-label={`${profile.name}'s favorite drinks`}>
+                  {profile.topDrinks.map((drink) => <div className={styles.barRow} key={drink.name}><span>{drink.name}</span><div><i style={{ width: `${Math.max(8, (drink.quantity / maxDrinks) * 100)}%` }} /></div><b>{drink.quantity}</b></div>)}
+                </div> : <p className={styles.profileEmpty}>Paid orders will appear here as they come in.</p>}
+              </article>;
+            })}
+          </div>
+        ) : <p className={styles.empty}>No profiles yet. Add someone above to start tracking them.</p>}
       </section>
     </main>
   );
@@ -178,3 +203,4 @@ function formatTimestamp(value: string): string {
     timeZoneName: "short",
   }).format(new Date(normalizeTimestamp(value)));
 }
+
