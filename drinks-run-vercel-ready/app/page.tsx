@@ -1,10 +1,11 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
-import { catalog, paymentMethods } from "../lib/catalog";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { catalog, paymentMethods, type CatalogItem } from "../lib/catalog";
 
 export default function Home() {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [menu, setMenu] = useState<readonly CatalogItem[]>(catalog);
   const [flavors, setFlavors] = useState<Record<string, string>>({});
   const [name, setName] = useState("");
   const [partyName, setPartyName] = useState("");
@@ -17,10 +18,19 @@ export default function Home() {
   const [submitError, setSubmitError] = useState("");
   const [orderId, setOrderId] = useState("");
   const [confirmedTotalCents, setConfirmedTotalCents] = useState(0);
+  const [customDrinkName, setCustomDrinkName] = useState("");
+  const [customDrinkDetail, setCustomDrinkDetail] = useState("");
+  const [requestMessage, setRequestMessage] = useState("");
+
+  useEffect(() => {
+    fetch("/api/catalog").then((response) => response.json()).then((result: { catalog?: CatalogItem[] }) => {
+      if (Array.isArray(result.catalog)) setMenu(result.catalog);
+    }).catch(() => undefined);
+  }, []);
 
   const selected = useMemo(
-    () => catalog.filter((item) => (quantities[item.id] ?? 0) > 0),
-    [quantities],
+    () => menu.filter((item) => (quantities[item.id] ?? 0) > 0),
+    [menu, quantities],
   );
 
   const totalCents = selected.reduce(
@@ -40,6 +50,14 @@ export default function Home() {
   function changeFlavor(id: string, value: string) {
     setFlavors((current) => ({ ...current, [id]: value }));
     setSubmitError("");
+  }
+
+  async function requestCustomDrink() {
+    if (!customDrinkName.trim()) return;
+    setRequestMessage("Sending…");
+    const response = await fetch("/api/drink-requests", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: customDrinkName, detail: customDrinkDetail }) });
+    setRequestMessage(response.ok ? "Sent to the organizer for approval." : "Couldn’t send that request. Try again.");
+    if (response.ok) { setCustomDrinkName(""); setCustomDrinkDetail(""); }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -154,7 +172,7 @@ export default function Home() {
               <div><p className="eyebrow">The lineup</p><h2 id="menu-title">Choose your drinks</h2></div>
             </div>
             <div className="menu-grid">
-              {catalog.map((item) => {
+              {menu.map((item) => {
                 const quantity = quantities[item.id] ?? 0;
                 return (
                   <article className={`menu-card ${quantity > 0 ? "selected" : ""}`} key={item.id}>
@@ -192,6 +210,12 @@ export default function Home() {
                 );
               })}
             </div>
+          </section>
+
+          <section className="custom-drink-card" aria-labelledby="custom-drink-title">
+            <div><p className="eyebrow">Don&apos;t see it?</p><h2 id="custom-drink-title">Request a drink</h2><p>Send the name and variety to the organizer. They&apos;ll set the price and decide whether to add it.</p></div>
+            <div className="custom-drink-fields"><input value={customDrinkName} onChange={(event) => setCustomDrinkName(event.target.value)} placeholder="Drink name" maxLength={80} /><input value={customDrinkDetail} onChange={(event) => setCustomDrinkDetail(event.target.value)} placeholder="Size or variety (optional)" maxLength={100} /><button type="button" onClick={requestCustomDrink} disabled={!customDrinkName.trim() || requestMessage === "Sending…"}>Send request</button></div>
+            {requestMessage ? <p className="request-message" role="status">{requestMessage}</p> : null}
           </section>
 
           <section className="form-section" aria-labelledby="payment-title">
