@@ -105,9 +105,12 @@ export default function Home() {
             ))}
           </div>
           <p className="order-reference">Order reference: {orderId.slice(0, 8).toUpperCase()}</p>
-          <button className="primary-button" type="button" onClick={() => setSubmitted(false)}>
-            Edit my order
-          </button>
+          <div className="success-actions">
+            <a className="secondary-button" href="/">Home</a>
+            <button className="primary-button" type="button" onClick={() => setSubmitted(false)}>
+              Edit my order
+            </button>
+          </div>
         </section>
       </main>
     );
