@@ -74,6 +74,15 @@ a { color: inherit; }
 .flavor-field input { width: 100%; height: 44px; padding: 0 12px; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 10px; outline: none; }
 .flavor-field input:focus { border-color: var(--ink); box-shadow: 0 0 0 3px rgba(255,90,54,.18); }
 .flavor-field input::placeholder { color: #a29c91; }
+.custom-drink-card { padding: 24px; color: #fffdf8; background: var(--ink); border-radius: 20px; }
+.custom-drink-card .eyebrow { color: var(--acid); }
+.custom-drink-card h2 { margin: 0; font-size: 30px; letter-spacing: -.05em; }
+.custom-drink-card p:not(.eyebrow):not(.request-message) { max-width: 500px; margin: 8px 0 20px; color: #aaa99f; font-size: 13px; line-height: 1.5; }
+.custom-drink-fields { display: grid; grid-template-columns: 1fr 1.2fr auto; gap: 9px; }
+.custom-drink-fields input { min-height: 48px; padding: 0 13px; color: var(--ink); background: #fffdf8; border: 0; border-radius: 10px; }
+.custom-drink-fields button { min-height: 48px; padding: 0 16px; color: var(--ink); background: var(--acid); border: 0; border-radius: 10px; font-weight: 900; cursor: pointer; }
+.custom-drink-fields button:disabled { opacity: .45; cursor: not-allowed; }
+.request-message { margin: 13px 0 0; color: var(--acid); font-size: 12px; }
 
 .payment-options { display: flex; flex-wrap: wrap; gap: 10px; padding: 0; border: 0; }
 .payment-options label { cursor: pointer; }
@@ -128,6 +137,7 @@ a { color: inherit; }
 .secondary-button { min-height: 56px; padding: 0 22px; display: inline-flex; align-items: center; justify-content: center; color: var(--ink); border: 2px solid var(--ink); border-radius: 12px; font-weight: 900; text-decoration: none; transition: background .15s ease, transform .15s ease; }
 .secondary-button:hover, .secondary-button:focus-visible { background: var(--acid); transform: translateY(-2px); outline: none; }
 @media (max-width: 480px) { .success-actions { align-items: stretch; flex-direction: column; } .success-actions .primary-button { max-width: none; } }
+@media (max-width: 700px) { .custom-drink-fields { grid-template-columns: 1fr; } }
 
 @media (max-width: 980px) {
   .hero { min-height: 560px; }
