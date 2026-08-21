@@ -4,6 +4,7 @@ import { getAdminDashboardData } from "./data";
 import { StatusControl } from "./StatusControl";
 import { DeleteOrderButton } from "./DeleteOrderButton";
 import { DeleteProfileButton, ProfileForm } from "./ProfileForm";
+import { DrinkRequestControls } from "./DrinkRequestControls";
 import styles from "./admin.module.css";
 
 export const dynamic = "force-dynamic";
@@ -164,6 +165,11 @@ export default async function AdminPage() {
             })}
           </div>
         ) : <p className={styles.empty}>No profiles yet. Add someone above to start tracking them.</p>}
+      </section>
+
+      <section className={styles.requestsSection} aria-labelledby="requests-title">
+        <div className={styles.sectionTitle}><div><p className={styles.eyebrow}>Menu requests</p><h2 id="requests-title">Drinks waiting for approval</h2></div><p>Set a price and optionally paste a product photo URL. Approved drinks are added to the public lineup permanently.</p></div>
+        {dashboard.drinkRequests.length ? <div className={styles.requestList}>{dashboard.drinkRequests.map((request) => <article className={styles.requestCard} key={request.id}><div><h3>{request.name}</h3><p>{request.detail}</p></div><DrinkRequestControls id={request.id} /></article>)}</div> : <p className={styles.empty}>No drink requests waiting right now.</p>}
       </section>
     </main>
   );
