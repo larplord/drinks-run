@@ -275,10 +275,18 @@
 }
 
 .orderCard {
-  padding: clamp(18px, 3vw, 28px);
+  position: relative;
+  padding: clamp(22px, 3vw, 32px);
   background: #fffdf8;
-  border: 1px solid #d8d1c5;
-  border-radius: 21px;
+  border: 1px solid #d6cec0;
+  border-radius: 24px;
+  box-shadow: 0 8px 24px rgba(54, 45, 30, .06);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.orderCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(54, 45, 30, .1);
 }
 
 .orderMeta {
@@ -378,6 +386,85 @@
   gap: 8px;
 }
 
+.statusControl > div > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+:global(.deleteButton) {
+  min-height: 42px;
+  padding: 0 12px;
+  color: #a33b25;
+  background: transparent;
+  border: 1px solid #e3b5a6;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+:global(.deleteButton:hover), :global(.deleteButton:focus-visible) {
+  color: #fffdf8;
+  background: #a33b25;
+  outline: none;
+}
+
+.profilesSection {
+  max-width: 1240px;
+  margin: 78px auto 0;
+}
+
+:global(.profileForm) {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr auto;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+:global(.profileForm input) {
+  min-height: 46px;
+  padding: 0 13px;
+  color: #24241f;
+  background: #fffdf8;
+  border: 1px solid #bcb5a7;
+  border-radius: 10px;
+  font: inherit;
+}
+
+:global(.profileForm button) {
+  min-height: 46px;
+  padding: 0 17px;
+  color: #24241f;
+  background: #d9f34a;
+  border: 0;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+:global(.profileError) { grid-column: 1 / -1; color: #a33b25; font-size: 12px; }
+
+.profileGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px; }
+.profileCard { padding: 22px; background: #24241f; color: #fffdf8; border-radius: 20px; }
+.profileHeader { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
+.profileHeader h3 { margin: 0; font-size: 25px; letter-spacing: -.04em; }
+.profileHeader p { margin: 5px 0 0; color: #aaa99f; font-size: 12px; line-height: 1.4; }
+:global(.profileDelete) { color: #d9f34a; background: transparent; border: 0; font: inherit; font-size: 11px; cursor: pointer; }
+.profileMetrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 22px 0; }
+.profileMetrics div { padding: 11px; background: #34342e; border-radius: 10px; }
+.profileMetrics strong, .profileMetrics span { display: block; }
+.profileMetrics strong { font-size: 21px; }
+.profileMetrics span { margin-top: 3px; color: #aaa99f; font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+.barChart { display: grid; gap: 9px; }
+.barRow { display: grid; grid-template-columns: 90px 1fr 24px; align-items: center; gap: 8px; font-size: 11px; }
+.barRow > div { height: 9px; overflow: hidden; background: #4a4a42; border-radius: 99px; }
+.barRow i { display: block; height: 100%; background: #d9f34a; border-radius: inherit; }
+.barRow b { color: #d9f34a; text-align: right; }
+.profileEmpty { margin: 0; color: #aaa99f; font-size: 12px; }
+
 .statusControl select {
   min-height: 42px;
   padding: 0 34px 0 12px;
@@ -435,4 +522,7 @@
   .statusControl select {
     width: 100%;
   }
+
+  :global(.profileForm) { grid-template-columns: 1fr; }
 }
+
