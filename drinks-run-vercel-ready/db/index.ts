@@ -29,6 +29,17 @@ const SCHEMA_SQL = `
   CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
   CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
+
+  CREATE TABLE IF NOT EXISTS customer_profiles (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_customer_profiles_name
+    ON customer_profiles(name);
 `;
 
 declare global {
@@ -72,3 +83,4 @@ export async function ensureDatabase(): Promise<Pool> {
   await globalThis.drinksRunSchema;
   return pool;
 }
+
