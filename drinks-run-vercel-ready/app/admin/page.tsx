@@ -161,8 +161,12 @@ function formatPartyDate(value: string): string {
 }
 
 function normalizeTimestamp(value: string): string {
-  if (value.includes("T")) return value;
-  return `${value.replace(" ", "T")}Z`;
+  const normalized = value.trim().includes("T")
+    ? value.trim()
+    : value.trim().replace(" ", "T");
+  const withFullOffset = normalized.replace(/([+-]\d{2})$/, "$1:00");
+  const parsed = new Date(withFullOffset);
+  return Number.isNaN(parsed.getTime()) ? new Date(0).toISOString() : parsed.toISOString();
 }
 
 function formatTimestamp(value: string): string {
