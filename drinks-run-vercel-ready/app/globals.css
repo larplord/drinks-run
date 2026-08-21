@@ -123,7 +123,11 @@ a { color: inherit; }
 .success-receipt div { display: flex; justify-content: space-between; gap: 15px; margin: 9px 0; font-size: 13px; }
 .success-receipt span small { display: block; margin-top: 4px; color: var(--muted); }
 .order-reference { margin: 12px 0 0; color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
-.success-card .primary-button { max-width: 230px; }
+.success-actions { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+.success-actions .primary-button { flex: 1; max-width: 230px; margin-top: 0; }
+.secondary-button { min-height: 56px; padding: 0 22px; display: inline-flex; align-items: center; justify-content: center; color: var(--ink); border: 2px solid var(--ink); border-radius: 12px; font-weight: 900; text-decoration: none; transition: background .15s ease, transform .15s ease; }
+.secondary-button:hover, .secondary-button:focus-visible { background: var(--acid); transform: translateY(-2px); outline: none; }
+@media (max-width: 480px) { .success-actions { align-items: stretch; flex-direction: column; } .success-actions .primary-button { max-width: none; } }
 
 @media (max-width: 980px) {
   .hero { min-height: 560px; }
