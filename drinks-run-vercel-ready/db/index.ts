@@ -40,6 +40,21 @@ const SCHEMA_SQL = `
 
   CREATE INDEX IF NOT EXISTS idx_customer_profiles_name
     ON customer_profiles(name);
+
+  CREATE TABLE IF NOT EXISTS custom_drinks (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    detail TEXT NOT NULL DEFAULT 'Custom drink',
+    price_cents INTEGER,
+    image_url TEXT,
+    status TEXT NOT NULL DEFAULT 'pending'
+      CHECK (status IN ('pending', 'approved', 'rejected')),
+    submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    approved_at TIMESTAMPTZ
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_custom_drinks_status
+    ON custom_drinks(status);
 `;
 
 declare global {
