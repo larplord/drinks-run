@@ -42,6 +42,15 @@ export type CustomerProfile = {
   topDrinks: { name: string; quantity: number }[];
 };
 
+export type DrinkRequest = {
+  id: string;
+  name: string;
+  detail: string;
+  priceCents: number | null;
+  imageUrl: string | null;
+  status: "pending" | "approved" | "rejected";
+};
+
 type OrderRow = {
   id: string;
   customer_name: string;
@@ -69,6 +78,7 @@ export async function getAdminDashboardData(): Promise<{
   orders: AdminOrder[];
   shoppingList: ShoppingItem[];
   profiles: CustomerProfile[];
+  drinkRequests: DrinkRequest[];
 }> {
   const db = await ensureDatabase();
   const { rows: orderRows } = await db.query<OrderRow>(
@@ -146,6 +156,9 @@ export async function getAdminDashboardData(): Promise<{
     if (list.length < 5) list.push({ name: drink.name, quantity: Number(drink.quantity) });
     drinksByProfile.set(drink.profile_id, list);
   }
+  const { rows: requestRows } = await db.query<{ id: string; name: string; detail: string; price_cents: number | null; image_url: string | null; status: DrinkRequest["status"] }>(
+    `SELECT id, name, detail, price_cents, image_url, status FROM custom_drinks WHERE status = 'pending' ORDER BY submitted_at DESC`,
+  );
 
   return {
     orders: orderRows.map((order) => ({
@@ -172,6 +185,7 @@ export async function getAdminDashboardData(): Promise<{
       drinkCount: Number(profile.drink_count),
       topDrinks: drinksByProfile.get(profile.id) ?? [],
     })),
+    drinkRequests: requestRows.map((request) => ({ id: request.id, name: request.name, detail: request.detail, priceCents: request.price_cents === null ? null : Number(request.price_cents), imageUrl: request.image_url, status: request.status })),
   };
 }
 
