@@ -1,5 +1,5 @@
 import { ensureDatabase } from "@/db";
-import { catalog, findCatalogItem, paymentMethods } from "@/lib/catalog";
+import { catalog, paymentMethods } from "@/lib/catalog";
 import {
   hasOnlyKeys,
   isRecord,
@@ -55,14 +55,15 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
 
-    const order = validateOrder(payload);
+    const db = await ensureDatabase();
+    const availableCatalog = await getAvailableCatalog(db);
+    const order = validateOrder(payload, availableCatalog);
     const orderId = crypto.randomUUID();
     const totalCents = order.items.reduce(
       (total, item) => total + item.catalogItem.priceCents * item.quantity,
       0,
     );
 
-    const db = await ensureDatabase();
     const client = await db.connect();
     try {
       await client.query("BEGIN");
@@ -122,7 +123,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 }
 
-function validateOrder(payload: Record<string, unknown>): ValidatedOrder {
+function validateOrder(payload: Record<string, unknown>, availableCatalog: CatalogItem[]): ValidatedOrder {
   if (!hasOnlyKeys(payload, ORDER_KEYS)) {
     throw new RequestError(400, "The order contains unsupported fields.");
   }
@@ -153,7 +154,7 @@ function validateOrder(payload: Record<string, unknown>): ValidatedOrder {
   if (
     !Array.isArray(payload.items) ||
     payload.items.length < 1 ||
-    payload.items.length > catalog.length
+    payload.items.length > availableCatalog.length
   ) {
     throw new RequestError(400, "Choose at least one valid menu item.");
   }
@@ -166,7 +167,7 @@ function validateOrder(payload: Record<string, unknown>): ValidatedOrder {
     if (typeof value.id !== "string" || seenIds.has(value.id)) {
       throw new RequestError(400, "Each menu item can appear only once.");
     }
-    const catalogItem = findCatalogItem(value.id);
+    const catalogItem = availableCatalog.find((item) => item.id === value.id);
     if (!catalogItem) {
       throw new RequestError(400, "An order item is not on the current menu.");
     }
@@ -191,6 +192,18 @@ function validateOrder(payload: Record<string, unknown>): ValidatedOrder {
     paymentMethod: payload.paymentMethod as (typeof paymentMethods)[number],
     items,
   };
+}
+
+type CatalogItem = (typeof catalog)[number];
+
+async function getAvailableCatalog(db: Awaited<ReturnType<typeof ensureDatabase>>): Promise<CatalogItem[]> {
+  const { rows } = await db.query<{ id: string; name: string; detail: string; price_cents: number; image_url: string | null }>(
+    `SELECT id, name, detail, price_cents, image_url FROM custom_drinks WHERE status = 'approved'`,
+  );
+  return [...catalog, ...rows.map((item) => ({
+    id: item.id, name: item.name, detail: item.detail, priceCents: Number(item.price_cents),
+    imagePath: item.image_url ?? undefined, tone: "coral" as const,
+  }))];
 }
 
 function requiredText(value: unknown, label: string, maxLength: number): string {
@@ -244,3 +257,4 @@ function validateDate(value: unknown): string {
   }
   return value;
 }
+
