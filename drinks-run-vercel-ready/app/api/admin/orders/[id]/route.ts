@@ -70,3 +70,24 @@ export async function PATCH(
     );
   }
 }
+
+export async function DELETE(
+  request: Request,
+  context: { params: Promise<{ id: string }> },
+): Promise<Response> {
+  try {
+    requireSameOrigin(request);
+    const access = await getOwnerApiAccess();
+    if (!access.allowed) return jsonResponse({ error: "Not allowed." }, { status: 403 });
+    const { id } = await context.params;
+    if (!UUID_PATTERN.test(id)) throw new RequestError(400, "Invalid order reference.");
+    const db = await ensureDatabase();
+    const result = await db.query("DELETE FROM orders WHERE id = $1", [id]);
+    if (!result.rowCount) return jsonResponse({ error: "Order not found." }, { status: 404 });
+    return jsonResponse({ ok: true });
+  } catch (error) {
+    if (error instanceof RequestError) return jsonResponse({ error: error.message }, { status: error.status });
+    return jsonResponse({ error: "The order could not be deleted." }, { status: 503 });
+  }
+}
+
