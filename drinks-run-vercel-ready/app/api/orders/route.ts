@@ -56,7 +56,7 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     const db = await ensureDatabase();
-    const availableCatalog = await getAvailableCatalog(db);
+    const availableCatalog = await getAvailableCatalogForOrder(db, payload.items);
     const order = validateOrder(payload, availableCatalog);
     const orderId = crypto.randomUUID();
     const totalCents = order.items.reduce(
@@ -196,9 +196,33 @@ function validateOrder(payload: Record<string, unknown>, availableCatalog: Catal
 
 type CatalogItem = (typeof catalog)[number];
 
-async function getAvailableCatalog(db: Awaited<ReturnType<typeof ensureDatabase>>): Promise<CatalogItem[]> {
-  const { rows } = await db.query<{ id: string; name: string; detail: string; price_cents: number; image_url: string | null }>(
-    `SELECT id, name, detail, price_cents, image_url FROM custom_drinks WHERE status = 'approved'`,
+async function getAvailableCatalogForOrder(
+  db: Awaited<ReturnType<typeof ensureDatabase>>,
+  items: unknown,
+): Promise<CatalogItem[]> {
+  const builtInIds = new Set(catalog.map((item) => item.id));
+  const customIds = Array.isArray(items)
+    ? items
+        .filter(isRecord)
+        .map((item) => item.id)
+        .filter((id): id is string => typeof id === "string" && !builtInIds.has(id))
+    : [];
+
+  // Keep the normal order path independent of the optional custom-drink table.
+  // This matters for databases created before custom drinks were introduced.
+  if (!customIds.length) return [...catalog];
+
+  const { rows } = await db.query<{
+    id: string;
+    name: string;
+    detail: string;
+    price_cents: number;
+    image_url: string | null;
+  }>(
+    `SELECT id, name, detail, price_cents, image_url
+       FROM custom_drinks
+      WHERE status = 'approved' AND id = ANY($1::text[])`,
+    [customIds],
   );
   return [...catalog, ...rows.map((item) => ({
     id: item.id, name: item.name, detail: item.detail, priceCents: Number(item.price_cents),

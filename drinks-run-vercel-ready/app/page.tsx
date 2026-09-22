@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { catalog, paymentMethods, type CatalogItem } from "../lib/catalog";
 
 export default function Home() {
@@ -124,7 +125,7 @@ export default function Home() {
           </div>
           <p className="order-reference">Order reference: {orderId.slice(0, 8).toUpperCase()}</p>
           <div className="success-actions">
-            <a className="secondary-button" href="/">Home</a>
+            <Link className="secondary-button" href="/">Home</Link>
             <button className="primary-button" type="button" onClick={() => setSubmitted(false)}>
               Edit my order
             </button>
